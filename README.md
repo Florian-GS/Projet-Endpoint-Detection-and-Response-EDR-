@@ -28,3 +28,35 @@ Dans la liste des agents sur wazuh dashboard on devrait alors voir notre machine
 
 ## 3. Installation d'agent sur une deuxieme machine Windows 11.
 Meme étape, on se connecte avec Alice qui est ADMIN et commandes d'installation powershell.
+
+Les deux agents sont installé :
+
+![alt text](<Screenshots/4. Deux agents activé.png>)
+
+## 4. Installation d'une VM Kali pre build pour lancer les attaques
+
+ - On lance une nouvelle VM Kali, on la met sur le réseau et on performe une detection nmap du reseau :
+ nmap -sV ip_reseau/24
+
+ Il a pu trouver : le server windows, l'ordinateur sous windows 11, le server Wazuh et lui meme (linux kali).
+ Kali est donc pret a attaquer
+
+ ## 5. Bruteforce SMB (port 445) avec Metasploit
+ L'objectif est d'attaquer le server windows depuis Kali.
+
+Le protocole SMB sur le port 445 sert au partage de ressources reseaux (fichier, dossiers, imprimante). Il s'agit d'une authentification par mot de passe (le mot de passe login), donc s'il est faible, on peut le bruteforce facilement.
+Normalement, mon mot de passe est complexe et n'est pas dans la list rockyou.txt. Metasploit devrait echouer a le bruteforce
+
+- on ouvre metasploit : msfconsole
+- on utilise l'outil smb login : use auxiliary/scanner/smb/smb_login
+- on definit a metasploit quel hote attaquer : set RHOSTS 192.168.29.10
+- on definit le nom de l'utilisateur : set SMBUser Administrator
+- on lui fournit la liste de mot de passe : set PASS_FILE /usr/share/wordlists/rockyou.txt
+- on execute : run
+
+Metasploit n'a pas trouvé mon mot de passe.
+Dans Wazuh dashboard, on a bien une alerte qui nous previens que beaucoup d'authentification ratés sont en cours :
+
+![alt text](<Screenshots/5. Authentification failure.png>)
+
+Supposons qu'il ai trouvé le mot de passe, on peut ouvrir un shell depuis le terminal et controler le pc.
